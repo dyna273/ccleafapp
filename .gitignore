@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.DS_Store
+.vite/
+android/build/
+android/app/src/main/assets/
+!android/build/*.apk

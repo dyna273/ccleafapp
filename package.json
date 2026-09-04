@@ -1,0 +1,43 @@
+{
+  "name": "leafforge-studio",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "LeafForge Studio - Minecraft .bbmodel animation studio & YouTube thumbnail maker",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 5173",
+    "build": "tsc -b && vite build",
+    "build:web": "tsc -b && vite build",
+    "build:apk-assets": "tsc -b && vite build --mode apk && node android/prepare-assets.mjs",
+    "preview": "vite preview --host 0.0.0.0 --port 4173",
+    "samples": "node scripts/make-samples.mjs",
+    "icons": "node scripts/make-icons.mjs",
+    "typecheck": "tsc -b",
+    "verify:uv": "esbuild scripts/verify-uv.ts --bundle --format=esm --platform=node --outfile=node_modules/.cache/verify-uv.mjs --log-level=warning && node node_modules/.cache/verify-uv.mjs",
+    "verify:render": "esbuild scripts/verify-render.ts --bundle --format=esm --platform=node --outfile=node_modules/.cache/verify-render.mjs --log-level=warning && node node_modules/.cache/verify-render.mjs",
+    "verify": "npm run samples && npm run typecheck && npm run verify:uv && npm run verify:render && npm run verify:ui",
+    "apk": "bash android/build.sh",
+    "verify:ui": "esbuild scripts/verify-ui.tsx --bundle --format=cjs --platform=node --outfile=node_modules/.cache/verify-ui.cjs --log-level=error --jsx=automatic --external:jsdom && node node_modules/.cache/verify-ui.cjs"
+  },
+  "dependencies": {
+    "@fontsource/anton": "^5.3.0",
+    "@fontsource/bebas-neue": "^5.3.0",
+    "@fontsource/luckiest-guy": "^5.3.0",
+    "lzutf8": "^0.6.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "^0.169.0",
+    "zustand": "^4.5.5"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "@types/three": "^0.169.0",
+    "@vitejs/plugin-react": "^4.3.2",
+    "esbuild": "^0.21.5",
+    "jsdom": "^30.0.1",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.9",
+    "vite-plugin-singlefile": "^2.0.2"
+  }
+}

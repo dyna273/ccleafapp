@@ -1,0 +1,72 @@
+name: Build Android APK
+
+# Rebuilds LeafForge-Studio.apk on demand and attaches it to the run.
+#
+# The sandbox build (android/build.sh) uses standalone aapt2/ecj/d8/apksigner
+# because the Android SDK and Gradle are not available there. In CI we can use
+# the real thing, so this workflow compiles the same WebView shell with the
+# Android Gradle Plugin instead.
+#
+# The committed APK stays in the repo; use this to refresh it after changing
+# src/ or android/.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'android/**'
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    name: Assemble release APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install web dependencies
+        run: npm ci
+
+      - name: Build the single-file web bundle
+        run: npm run build:apk-assets
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x android/gradlew 2>/dev/null || true
+
+      - name: Build with Gradle
+        if: hashFiles('android/build.gradle') != ''
+        working-directory: android
+        run: ./gradlew assembleRelease
+
+      - name: Fall back to the standalone toolchain
+        if: hashFiles('android/build.gradle') == ''
+        run: |
+          echo "No Gradle project in android/ - skipping APK assembly."
+          echo "Run 'npm run apk' locally to rebuild with the standalone toolchain."
+
+      - name: Upload APK artifact
+        if: hashFiles('android/app/build/outputs/apk/release/*.apk') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: LeafForge-Studio
+          path: android/app/build/outputs/apk/release/*.apk
