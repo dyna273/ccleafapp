@@ -37,7 +37,7 @@ interface StoreState {
   setBusy(busy: string | null): void;
   notify(message: string, kind?: 'info' | 'error' | 'success'): void;
 
-  loadModelFromFile(file: File | ArrayBuffer): Promise<void>;
+  loadModelFromFile(file: File | ArrayBuffer, nameOverride?: string): Promise<void>;
   loadModelFromUrl(url: string, name: string): Promise<void>;
   clearModel(): void;
   refreshAnimations(): void;
@@ -130,13 +130,15 @@ export const useStore = create<StoreState>((set, get) => ({
     toastTimer = setTimeout(() => set({ toast: null }), 3600);
   },
 
-  async loadModelFromFile(file) {
+  async loadModelFromFile(file, nameOverride) {
     const engine = get().engine;
     if (!engine) return;
     set({ busy: 'Loading model…', modelError: null });
     try {
       const parsed = await loadBBModelFile(file);
-      const name = typeof file !== 'string' && 'name' in file ? file.name : 'model.bbmodel';
+      const name =
+        nameOverride ||
+        (typeof file !== 'string' && 'name' in file ? file.name : 'model.bbmodel');
       await engine.setModel(parsed, name);
       set({ model: parsed, modelName: name.replace(/\.bbmodel$/i, ''), busy: null });
       get().patch((p) => {
@@ -157,7 +159,7 @@ export const useStore = create<StoreState>((set, get) => ({
       const key = url.split('/').pop() || '';
       const inlined = typeof window !== 'undefined' ? window.LEAFFORGE_SAMPLES?.[key] : undefined;
       const buffer = inlined ? base64ToArrayBuffer(inlined) : await (await fetch(url)).arrayBuffer();
-      await get().loadModelFromFile(buffer);
+      await get().loadModelFromFile(buffer, name);
       set({ modelName: name });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
